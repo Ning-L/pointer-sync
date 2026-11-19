@@ -232,9 +232,22 @@ window.RevealPointerSync = (function() {
           console.log(`[${windowType}] Pointer is ${flagstr}abled.`)
           isPointerDisabled = !isPointerDisabled;
           broadcastPointer(null, 'flag');
+          // Hide the pointer right away when it is switched off
+          if (isPointerDisabled) {
+            isPointerActive = false;
+            hidePointer();
+            broadcastPointer(null, 'hide');
+          }
         }
       }, true);
-      
+
+      // Hide the pointer when the mouse leaves the window
+      document.documentElement.addEventListener('mouseleave', () => {
+        isPointerActive = false;
+        hidePointer();
+        broadcastPointer(null, 'hide');
+      });
+
       // Hide the laser pointer if the Ctrl key is up
       document.addEventListener('keyup', (event) => {
         if (isPointerDisabled || opts.alwaysOn) return;
