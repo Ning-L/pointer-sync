@@ -7,4 +7,10 @@ contributes:
     - name: RevealPointerSync
       script:
         - pointer-sync.js
-
+      config:
+        pointerSync:    # camelCase here; users write `pointer-sync:` in their YAML
+          alwaysOn: false                          # true = no need to hold Ctrl/Cmd
+          color: "rgba(255, 0, 0, 0.7)"            # fill
+          borderColor: "rgba(255, 255, 255, 0.9)"  # outline
+          borderRatio: 0.1                         # outline width, as a fraction of the pointer size
+          sizeRatio: 0.02                          # pointer size, as a fraction of the slide width

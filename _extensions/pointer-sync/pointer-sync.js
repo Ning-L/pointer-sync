@@ -10,8 +10,15 @@ window.RevealPointerSync = (function() {
   let isPointerActive = false;
   let isPointerDisabled = false;
   
-  // Base pointer size (ratio of the slide width)
-  const POINTER_SIZE_RATIO = 2 / 100;  // 2% of the slide width
+  // Options (defaults reproduce the original behaviour).
+  // Set them in the YAML front matter, under `pointer-sync:`.
+  let opts = {
+    alwaysOn: false,                         // true = no need to hold Ctrl/Cmd
+    color: 'rgba(255, 0, 0, 0.7)',           // fill
+    borderColor: 'rgba(255, 255, 255, 0.9)', // outline
+    borderRatio: 0.1,                        // outline width, as a fraction of the pointer size
+    sizeRatio: 0.02,                         // pointer size, as a fraction of the slide width
+  };
 
   const isMac = navigator.userAgent.toUpperCase().includes('MAC');
   
@@ -23,8 +30,8 @@ window.RevealPointerSync = (function() {
     p.style.cssText = `
       position: fixed;
       border-radius: 50%;
-      background: rgba(255, 0, 0, 0.7);
-      border: 2px solid rgba(255, 255, 255, 0.9);
+      background: ${opts.color};
+      border: 2px solid ${opts.borderColor};
       pointer-events: none;
       z-index: 9999;
       display: none;
@@ -56,7 +63,7 @@ window.RevealPointerSync = (function() {
     const rect = slides.getBoundingClientRect();
     
     // Calculate the pointer size from the slide width
-    const pointerSize = rect.width * POINTER_SIZE_RATIO;
+    const pointerSize = rect.width * opts.sizeRatio;
     
     return {
       x: rect.left + rect.width * relX,
@@ -68,7 +75,7 @@ window.RevealPointerSync = (function() {
   // Show the pointer (dynamically adjust the size)
   function showPointer(x, y, size) {
     if (pointer) {
-      const borderWidth = Math.max(size * 0.1, 1);  // 10% of the size (minimum: 1 px)
+      const borderWidth = Math.max(size * opts.borderRatio, 1);  // fraction of the size (minimum: 1 px)
       
       pointer.style.left = x + 'px';
       pointer.style.top = y + 'px';
@@ -140,6 +147,7 @@ window.RevealPointerSync = (function() {
   return {
     id: 'RevealPointerSync',
     init: (deck) => {
+      opts = Object.assign(opts, deck.getConfig().pointerSync || {});
       pointer = createPointer();
       
       console.log('========================================');
@@ -191,7 +199,7 @@ window.RevealPointerSync = (function() {
         if (isPointerDisabled) return;
 
         const ctrlKey = isMac ? event.metaKey : event.ctrlKey;
-        if (ctrlKey) {
+        if (opts.alwaysOn || ctrlKey) {
           if (!isPointerActive) {
             isPointerActive = true;
             console.log(`[${windowType}] Pointer ON`);
@@ -229,7 +237,7 @@ window.RevealPointerSync = (function() {
       
       // Hide the laser pointer if the Ctrl key is up
       document.addEventListener('keyup', (event) => {
-        if (isPointerDisabled) return;
+        if (isPointerDisabled || opts.alwaysOn) return;
 
         const ctrlKey = isMac ? 'Meta' : 'Control';
         if (event.key === ctrlKey) {
